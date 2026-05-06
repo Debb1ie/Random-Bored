@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unstuck — For Bored Students</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --yellow: #f5e642;
+    --orange: #ff6b35;
+    --pink: #ff3d9a;
+    --cyan: #3df5e6;
+    --purple: #a855f7;
+    --text: #f0eee8;
+    --muted: #6b6b80;
+    --border: #2a2a3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
+
+  /* Hero */
+  header {
+    padding: 60px 40px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--yellow);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    animation: fadeUp 0.7s ease both;
+  }
+
+  h1 .accent { color: var(--yellow); }
+  h1 .accent2 { color: var(--orange); }
+
+  .subtitle {
+    margin-top: 24px;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 460px;
+    line-height: 1.7;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-deco {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle at 50% 50%, rgba(245,230,66,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+
+  /* Spin wheel section */
+  .spin-section {
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+    animation: fadeUp 1s ease both;
+  }
+
+  .spin-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  canvas#wheel {
+    display: block;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+
+  canvas#wheel:hover { filter: brightness(1.1); }
+
+  .wheel-pointer {
+    position: absolute;
+    right: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    border-right: 22px solid var(--yellow);
+    filter: drop-shadow(0 0 8px rgba(245,230,66,0.8));
+  }
+
+  .spin-content { flex: 1; min-width: 220px; }
+
+  .spin-content h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .spin-content p { color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-yellow { background: var(--yellow); color: #000; box-shadow: 0 4px 20px rgba(245,230,66,0.25); }
+  .btn-yellow:hover { box-shadow: 0 8px 30px rgba(245,230,66,0.4); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  .spin-result {
+    margin-top: 20px;
+    display: none;
+    padding: 16px 20px;
+    background: rgba(245,230,66,0.08);
+    border: 1px solid rgba(245,230,66,0.25);
+    border-radius: 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--yellow);
+    animation: popIn 0.4s ease both;
+  }
+
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+  /* Categories grid */
+  .categories {
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+  }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .cat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .cat-card:nth-child(1) { animation-delay: 0.1s; }
+  .cat-card:nth-child(2) { animation-delay: 0.15s; }
+  .cat-card:nth-child(3) { animation-delay: 0.2s; }
+  .cat-card:nth-child(4) { animation-delay: 0.25s; }
+  .cat-card:nth-child(5) { animation-delay: 0.3s; }
+  .cat-card:nth-child(6) { animation-delay: 0.35s; }
+
+  .cat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--card-glow, transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 20px;
+  }
+
+  .cat-card:hover { transform: translateY(-4px); }
+  .cat-card:hover::before { opacity: 1; }
+
+  .cat-card[data-color="yellow"] { --card-glow: radial-gradient(circle at 30% 30%, rgba(245,230,66,0.07) 0%, transparent 70%); }
+  .cat-card[data-color="orange"] { --card-glow: radial-gradient(circle at 30% 30%, rgba(255,107,53,0.07) 0%, transparent 70%); }
+  .cat-card[data-color="pink"] { --card-glow: radial-gradient(circle at 30% 30%, rgba(255,61,154,0.07) 0%, transparent 70%); }
+  .cat-card[data-color="cyan"] { --card-glow: radial-gradient(circle at 30% 30%, rgba(61,245,230,0.07) 0%, transparent 70%); }
+  .cat-card[data-color="purple"] { --card-glow: radial-gradient(circle at 30% 30%, rgba(168,85,247,0.07) 0%, transparent 70%); }
+
+  .cat-card:hover[data-color="yellow"] { border-color: rgba(245,230,66,0.3); box-shadow: 0 8px 30px rgba(245,230,66,0.08); }
+  .cat-card:hover[data-color="orange"] { border-color: rgba(255,107,53,0.3); box-shadow: 0 8px 30px rgba(255,107,53,0.08); }
+  .cat-card:hover[data-color="pink"] { border-color: rgba(255,61,154,0.3); box-shadow: 0 8px 30px rgba(255,61,154,0.08); }
+  .cat-card:hover[data-color="cyan"] { border-color: rgba(61,245,230,0.3); box-shadow: 0 8px 30px rgba(61,245,230,0.08); }
+  .cat-card:hover[data-color="purple"] { border-color: rgba(168,85,247,0.3); box-shadow: 0 8px 30px rgba(168,85,247,0.08); }
+
+  .card-icon { font-size: 36px; margin-bottom: 16px; display: block; line-height: 1; }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .card-desc { color: var(--muted); font-size: 14px; line-height: 1.65; margin-bottom: 16px; }
+
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.05em;
+  }
+  .pill-yellow { background: rgba(245,230,66,0.12); color: var(--yellow); }
+  .pill-orange { background: rgba(255,107,53,0.12); color: var(--orange); }
+  .pill-pink { background: rgba(255,61,154,0.12); color: var(--pink); }
+  .pill-cyan { background: rgba(61,245,230,0.12); color: var(--cyan); }
+  .pill-purple { background: rgba(168,85,247,0.12); color: var(--purple); }
+
+  /* Expand panel */
+  .card-expand {
+    display: none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .cat-card.open .card-expand { display: block; }
+
+  .activity-list { list-style: none; }
+  .activity-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .activity-list li:last-child { border-bottom: none; }
+  .activity-list li::before { content: '→'; color: var(--muted); flex-shrink: 0; margin-top: 1px; }
+
+  /* Timer */
+  .timer-section {
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+  }
+
+  .timer-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .timer-display {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(60px, 8vw, 96px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--yellow);
+    text-shadow: 0 0 40px rgba(245,230,66,0.3);
+    line-height: 1;
+    flex-shrink: 0;
+    min-width: 220px;
+  }
+
+  .timer-controls { flex: 1; }
+  .timer-controls h2 { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .timer-controls p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  .timer-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .timer-preset {
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .timer-preset:hover, .timer-preset.active { border-color: var(--yellow); color: var(--yellow); background: rgba(245,230,66,0.06); }
+
+  .timer-main-btns { display: flex; gap: 10px; margin-top: 14px; }
+
+  /* Mood picker */
+  .mood-section {
+    max-width: 1100px;
+    margin: 0 auto 80px;
+    padding: 0 40px;
+  }
+
+  .mood-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+  }
+
+  .mood-box h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+  .mood-box p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .mood-btn {
+    padding: 16px 10px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-size: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mood-btn span { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted); }
+  .mood-btn:hover { transform: scale(1.05); border-color: var(--cyan); background: rgba(61,245,230,0.05); }
+  .mood-btn.selected { border-color: var(--cyan); background: rgba(61,245,230,0.1); box-shadow: 0 0 20px rgba(61,245,230,0.15); }
+
+  .mood-result {
+    display: none;
+    padding: 20px;
+    background: rgba(61,245,230,0.06);
+    border: 1px solid rgba(61,245,230,0.2);
+    border-radius: 16px;
+    animation: popIn 0.4s ease both;
+  }
+
+  .mood-result h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--cyan); margin-bottom: 12px; }
+  .mood-result ul { list-style: none; }
+  .mood-result ul li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(61,245,230,0.1);
+    font-size: 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    line-height: 1.5;
+  }
+  .mood-result ul li::before { content: '✦'; color: var(--cyan); font-size: 10px; margin-top: 3px; flex-shrink: 0; }
+  .mood-result ul li:last-child { border-bottom: none; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 30px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  footer p { color: var(--muted); font-size: 13px; }
+  .dot-live { display: inline-block; width: 8px; height: 8px; background: var(--yellow); border-radius: 50%; margin-right: 8px; animation: blink 1.5s ease infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 640px) {
+    header, .spin-section, .categories, .timer-section, .mood-section { padding: 0 20px; }
+    .spin-box, .timer-box { flex-direction: column; }
+    .hero-deco { display: none; }
+    footer { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hero-deco"></div>
+  <div class="tag">✦ For students who are SO over it</div>
+  <h1>Stop being<br><span class="accent">bored.</span><br><span class="accent2">Start doing.</span></h1>
+  <p class="subtitle">A no-fluff zone for when class ended 20 minutes ago and you still haven't moved. Pick an activity, spin the wheel, or match your mood.</p>
+</header>
+
+<!-- Spin the Wheel -->
+<section class="spin-section">
+  <div class="spin-box">
+    <div class="wheel-wrap">
+      <canvas id="wheel" width="220" height="220"></canvas>
+      <div class="wheel-pointer"></div>
+    </div>
+    <div class="spin-content">
+      <h2>Spin for a random activity</h2>
+      <p>Can't decide what to do? Let the wheel make the call. Give it a spin and try whatever lands — no excuses.</p>
+      <button class="btn btn-yellow" onclick="spinWheel()">⟳ &nbsp;Spin the Wheel</button>
+      <div class="spin-result" id="spinResult"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Activity Categories -->
+<section class="categories">
+  <div class="section-label">↓ Browse by category</div>
+  <div class="cards-grid">
+
+    <div class="cat-card" data-color="yellow" onclick="toggleCard(this)">
+      <span class="card-icon">🧠</span>
+      <div class="card-title">Learn Something</div>
+      <div class="card-desc">Feed your brain without the pressure of a syllabus. 10–30 min chunks that actually stick.</div>
+      <div class="card-tags">
+        <span class="pill pill-yellow">Free</span>
+        <span class="pill pill-yellow">Solo</span>
+        <span class="pill pill-yellow">Brain food</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Watch a Kurzgesagt or Veritasium video on a topic you know nothing about</li>
+          <li>Open Wikipedia and click "Random article" — follow 3 links deep</li>
+          <li>Learn one Duolingo lesson in a language you've always wanted to try</li>
+          <li>Pick a word in another language and memorize it with a silly story</li>
+          <li>Read one long-form article on The Conversation or Aeon</li>
+          <li>Try a free Khan Academy exercise on something you skipped in class</li>
+          <li>Search "how does [random object near you] work" — go down the rabbit hole</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-card" data-color="orange" onclick="toggleCard(this)">
+      <span class="card-icon">🎨</span>
+      <div class="card-title">Create Something</div>
+      <div class="card-desc">You don't have to be good at art to make things. Make something weird. Make something small.</div>
+      <div class="card-tags">
+        <span class="pill pill-orange">Creative</span>
+        <span class="pill pill-orange">Any skill level</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Write a 6-word story about your day (seriously, just 6 words)</li>
+          <li>Doodle on paper for 10 minutes with zero plan</li>
+          <li>Take 5 interesting photos around you right now — look for light and shadows</li>
+          <li>Open Google Slides and make a presentation about your pet or a show you like</li>
+          <li>Write the first paragraph of a story set in your school — but it's a thriller</li>
+          <li>Make a playlist that tells a story — title each section like a chapter</li>
+          <li>Design your dream bedroom layout on paper (include a secret room)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-card" data-color="cyan" onclick="toggleCard(this)">
+      <span class="card-icon">🏃</span>
+      <div class="card-title">Move Your Body</div>
+      <div class="card-desc">You've been sitting for hours. Your back knows it. Do literally anything physical for 10 minutes.</div>
+      <div class="card-tags">
+        <span class="pill pill-cyan">Active</span>
+        <span class="pill pill-cyan">Feels good</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Do a 10-minute stretching routine — search "office stretch routine" on YouTube</li>
+          <li>Walk around the block once while listening to a podcast</li>
+          <li>Do 3 sets of 10 jumping jacks, 10 squats, 10 push-ups — rest, repeat</li>
+          <li>Put on a random song and actually dance to the whole thing</li>
+          <li>Do the 7-minute scientific workout (search it — it's a real thing)</li>
+          <li>Stand outside for 5 minutes, breathe, look at something far away</li>
+          <li>Learn one TikTok dance routine (no judgment)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-card" data-color="pink" onclick="toggleCard(this)">
+      <span class="card-icon">🎮</span>
+      <div class="card-title">Play & Explore</div>
+      <div class="card-desc">Guilt-free games and rabbit holes. These are legitimately fun and some are secretly educational.</div>
+      <div class="card-tags">
+        <span class="pill pill-pink">Fun</span>
+        <span class="pill pill-pink">Solo or Group</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Play GeoGuessr — try to guess where in the world you are from Street View</li>
+          <li>Try the NYT Wordle, Connections, or Spelling Bee</li>
+          <li>Play Typeracer or Monkeytype to see how fast you type</li>
+          <li>Chess.com puzzle of the day — takes 5 minutes, exercises your brain</li>
+          <li>Try "The Impossible Quiz" online — it's stupid and amazing</li>
+          <li>Watch a SpeedRun video of your favorite game or movie</li>
+          <li>Open Google Earth and "visit" a place you want to go someday</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-card" data-color="purple" onclick="toggleCard(this)">
+      <span class="card-icon">💬</span>
+      <div class="card-title">Connect with People</div>
+      <div class="card-desc">Text someone you haven't talked to in a while. Boredom is better shared.</div>
+      <div class="card-tags">
+        <span class="pill pill-purple">Social</span>
+        <span class="pill pill-purple">Low effort</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Text a friend a random funny memory you both shared</li>
+          <li>Start a group chat debate: "Is a hot dog a sandwich?" — go</li>
+          <li>Send a voice note instead of a text to someone you miss</li>
+          <li>Watch the same YouTube video simultaneously with a friend and react in real-time</li>
+          <li>Play a browser game with a friend like skribbl.io or garticphone.com</li>
+          <li>Write an appreciation text to someone who'd be surprised to get one</li>
+          <li>Start a collaborative Spotify playlist with a friend and add 5 songs each</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cat-card" data-color="yellow" onclick="toggleCard(this)">
+      <span class="card-icon">🌱</span>
+      <div class="card-title">Do Future-You a Favor</div>
+      <div class="card-desc">Small things you've been putting off that take under 15 minutes. Future you says thanks.</div>
+      <div class="card-tags">
+        <span class="pill pill-yellow">Productive</span>
+        <span class="pill pill-yellow">15 min</span>
+      </div>
+      <div class="card-expand">
+        <ul class="activity-list">
+          <li>Clean up your desktop and downloads folder — delete what you don't need</li>
+          <li>Write down 3 things you want to do this week, then mark one as "today"</li>
+          <li>Unsubscribe from 5 newsletters or promo emails you never open</li>
+          <li>Drink a full glass of water. Then another. You're probably dehydrated.</li>
+          <li>Organize your notes app or study folder — label things properly</li>
+          <li>Look up one scholarship or opportunity related to what you want to study</li>
+          <li>Write 3 things you're genuinely proud of this month, no matter how small</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Pomodoro Timer -->
+<section class="timer-section">
+  <div class="section-label">↓ Focus timer</div>
+  <div class="timer-box">
+    <div class="timer-display" id="timerDisplay">25:00</div>
+    <div class="timer-controls">
+      <h2>The "just start" timer</h2>
+      <p>The hardest part is starting. Set a timer and commit to just that long. You can quit after. (You won't.)</p>
+      <div class="timer-btns">
+        <button class="timer-preset active" onclick="setTimer(25, this)">25 min</button>
+        <button class="timer-preset" onclick="setTimer(10, this)">10 min</button>
+        <button class="timer-preset" onclick="setTimer(5, this)">5 min</button>
+        <button class="timer-preset" onclick="setTimer(50, this)">50 min</button>
+      </div>
+      <div class="timer-main-btns">
+        <button class="btn btn-yellow" id="timerStartBtn" onclick="toggleTimer()">▶ &nbsp;Start</button>
+        <button class="btn btn-outline" onclick="resetTimer()">↺ &nbsp;Reset</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mood Picker -->
+<section class="mood-section">
+  <div class="section-label">↓ Match activities to your mood</div>
+  <div class="mood-box">
+    <h2>How are you feeling right now?</h2>
+    <p>Pick your current vibe and we'll suggest what to do with it.</p>
+    <div class="mood-grid">
+      <button class="mood-btn" onclick="pickMood(this, 'restless')">😤<span>Restless</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'tired')">😴<span>Tired</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'stressed')">😰<span>Stressed</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'bored')">🥱<span>Bored</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'curious')">🤔<span>Curious</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'creative')">✨<span>Creative</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'social')">🤝<span>Social</span></button>
+      <button class="mood-btn" onclick="pickMood(this, 'unmotivated')">😶<span>Unmotivated</span></button>
+    </div>
+    <div class="mood-result" id="moodResult">
+      <h3 id="moodTitle"></h3>
+      <ul id="moodList"></ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><span class="dot-live"></span>Unstuck — made for students, by someone who was also bored</p>
+  <p>Pick something. Do it. Repeat.</p>
+</footer>
+
+<script>
+// ========== WHEEL ==========
+const activities = [
+  "Watch a Kurzgesagt video",
+  "GeoGuessr round",
+  "10-min stretch",
+  "Write a 6-word story",
+  "Explore Wikipedia",
+  "Text an old friend",
+  "Skribbl.io session",
+  "Draw something nearby",
+  "Wordle / Connections",
+  "5-min walk outside"
+];
+
+const colors = ['#f5e642','#ff6b35','#ff3d9a','#3df5e6','#a855f7','#f5e642','#ff6b35','#ff3d9a','#3df5e6','#a855f7'];
+
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const numSegments = activities.length;
+const arc = (2 * Math.PI) / numSegments;
+let currentAngle = 0;
+let spinning = false;
+
+function drawWheel(angle) {
+  ctx.clearRect(0, 0, 220, 220);
+  const cx = 110, cy = 110, r = 100;
+  for (let i = 0; i < numSegments; i++) {
+    const start = angle + i * arc;
+    const end = start + arc;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = '#0a0a0f';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = i % 2 === 0 ? '#000' : '#fff';
+    ctx.font = 'bold 9px Syne, sans-serif';
+    const label = activities[i].length > 14 ? activities[i].slice(0, 13) + '…' : activities[i];
+    ctx.fillText(label, r - 8, 4);
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, 16, 0, 2 * Math.PI);
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fill();
+  ctx.strokeStyle = '#f5e642';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+drawWheel(currentAngle);
+
+function spinWheel() {
+  if (spinning) return;
+  spinning = true;
+  document.getElementById('spinResult').style.display = 'none';
+  const spinAmount = (Math.PI * 2 * (8 + Math.random() * 6));
+  const duration = 3500;
+  const start = performance.now();
+  const startAngle = currentAngle;
+
+  function animate(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 4);
+    currentAngle = startAngle + spinAmount * ease;
+    drawWheel(currentAngle);
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      spinning = false;
+      const normalized = ((2 * Math.PI) - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
+      const idx = Math.floor((normalized / (2 * Math.PI)) * numSegments) % numSegments;
+      const result = document.getElementById('spinResult');
+      result.textContent = '🎯 ' + activities[idx];
+      result.style.display = 'block';
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+canvas.addEventListener('click', spinWheel);
+
+// ========== CARDS ==========
+function toggleCard(card) {
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.cat-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+
+// ========== TIMER ==========
+let timerInterval = null;
+let timerSeconds = 25 * 60;
+let timerRunning = false;
+
+function setTimer(mins, btn) {
+  resetTimer();
+  timerSeconds = mins * 60;
+  updateTimerDisplay();
+  document.querySelectorAll('.timer-preset').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  const s = (timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = m + ':' + s;
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timerStartBtn').textContent = '▶  Resume';
+  } else {
+    timerInterval = setInterval(() => {
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timerStartBtn').textContent = '▶  Start';
+        document.getElementById('timerDisplay').textContent = '00:00';
+        document.getElementById('timerDisplay').style.color = '#ff3d9a';
+        return;
+      }
+      timerSeconds--;
+      updateTimerDisplay();
+    }, 1000);
+    timerRunning = true;
+    document.getElementById('timerStartBtn').innerHTML = '⏸ &nbsp;Pause';
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  const active = document.querySelector('.timer-preset.active');
+  const mins = active ? parseInt(active.textContent) : 25;
+  timerSeconds = mins * 60;
+  updateTimerDisplay();
+  document.getElementById('timerStartBtn').innerHTML = '▶ &nbsp;Start';
+  document.getElementById('timerDisplay').style.color = 'var(--yellow)';
+}
+
+// ========== MOOD ==========
+const moodData = {
+  restless: {
+    title: "Restless → Burn it off",
+    items: [
+      "Go for a brisk 10-min walk and listen to something fast-paced",
+      "Do jumping jacks or the 7-minute workout until you feel human again",
+      "Put on a loud playlist and clean/organize something physical",
+      "Challenge a friend to a typing speed race on Typeracer",
+      "Channel it into making something — sketch, write, build"
+    ]
+  },
+  tired: {
+    title: "Tired → Low-effort, still good",
+    items: [
+      "Lie down and listen to a podcast or audiobook for 20 minutes",
+      "Watch a calm YouTube video (LoFi study streams, nature, city walks)",
+      "Do a gentle 5-minute stretch — it's more energizing than you think",
+      "Drink water. Seriously. You're probably dehydrated.",
+      "Write 3 things from today that were actually okay"
+    ]
+  },
+  stressed: {
+    title: "Stressed → Breathe first",
+    items: [
+      "Do box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s — repeat 5x",
+      "Go for a walk outside without your phone for even 5 minutes",
+      "Write out exactly what's stressing you — paper only, trash it after",
+      "Make tea or a snack slowly, focusing on just that one thing",
+      "Watch a calm, funny video — try r/wholesome or baby animal compilations"
+    ]
+  },
+  bored: {
+    title: "Bored → Time to explore",
+    items: [
+      "Spin the wheel at the top of this page — commit to whatever you get",
+      "Open Wikipedia, click Random — follow links for 15 minutes",
+      "Try GeoGuessr and see how well you know the world",
+      "Start a new show — but only 1 episode, then decide",
+      "Text someone a weird question to start a conversation"
+    ]
+  },
+  curious: {
+    title: "Curious → Feed it",
+    items: [
+      "Watch a Kurzgesagt, Vsauce, or Wendover Productions video",
+      "Look up one unsolved mystery in science or history",
+      "Read a long-form article on Aeon, Nautilus, or The Conversation",
+      "Learn the basic rules of chess and try one puzzle on chess.com",
+      "Pick a skill (origami, card tricks, coding) and watch 20 min of a tutorial"
+    ]
+  },
+  creative: {
+    title: "Creative → Make something",
+    items: [
+      "Write a short story in exactly 100 words",
+      "Take 10 interesting photos of ordinary things around you",
+      "Design something in Canva — a fake album cover, a poster, a meme",
+      "Make a playlist that tells a story from beginning to end",
+      "Sketch a character based on someone you know — give them a superpower"
+    ]
+  },
+  social: {
+    title: "Social → Reach out",
+    items: [
+      "Text 3 people something you appreciate about them — see what happens",
+      "Start a game of Gartic Phone or skribbl.io with a group chat",
+      "Call someone you haven't spoken to in over a month",
+      "Send a funny reel or meme with a personal message, not just a forward",
+      "Plan something simple with a friend this week — even just a walk"
+    ]
+  },
+  unmotivated: {
+    title: "Unmotivated → Tiny steps",
+    items: [
+      "The 2-minute rule: do one thing that takes under 2 minutes — right now",
+      "Set a 5-minute timer and just open the thing you've been avoiding",
+      "Write down the ONE smallest possible next step, then do only that",
+      "Change your environment — move to a different room or go outside",
+      "Make your bed. It sounds dumb but it actually works."
+    ]
+  }
+};
+
+function pickMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const data = moodData[mood];
+  document.getElementById('moodTitle').textContent = data.title;
+  const list = document.getElementById('moodList');
+  list.innerHTML = data.items.map(i => `<li>${i}</li>`).join('');
+  const result = document.getElementById('moodResult');
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
